@@ -13,23 +13,28 @@ from .serializers import UserSerializer
 
 
 class UsersView(APIView):
+    serializer_class = UserSerializer
+
     def post(self, request):
-        serializer = UserSerializer(request.data)
+        serializer = self.serializer_class(request.data)
         if serializer.is_valid():
             new_user = serializer.save()
-            return Response(UserSerializer(new_user).data)
+            return Response(self.serializer_class(new_user).data)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
 
 
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = UserSerializer
 
     def get(self, request):
-        return Response(UserSerializer(request.user).data)
+        return Response(self.serializer_class(request.user).data)
 
     def put(self, request):
-        serializer = UserSerializer(request.user, data=request.data, partial=True)
+        serializer = self.serializer_class(
+            request.user, data=request.data, partial=True
+        )
         if serializer.is_valid():
             serializer.save()
             return Response()
@@ -39,10 +44,11 @@ class MeView(APIView):
 
 class FavsView(APIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = UserSerializer
 
     def get(self, request):
         user = request.user
-        serializer = RoomSerializer(user.favs.all(), many=True).data
+        serializer = self.serializer_class(user.favs.all(), many=True).data
         return Response(serializer)
 
     def put(self, request):
