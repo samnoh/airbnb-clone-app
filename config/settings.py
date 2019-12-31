@@ -144,7 +144,7 @@ JWT_SECRET = os.environ.get("JWT_SECRET")
 
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    "PAGE_SIZE": 10,
+    "PAGE_SIZE": 1,
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "config.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",

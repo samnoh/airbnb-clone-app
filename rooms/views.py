@@ -1,17 +1,20 @@
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from core.paginations import Pagination
 from .models import Room
 from .serializers import RoomSerializer
 
 
-class RoomsView(APIView):
+class RoomsView(APIView, Pagination):
     serializer_class = RoomSerializer
 
     def get(self, request):
-        rooms = Room.objects.all()[:5]
-        serializer = self.serializer_class(rooms, many=True).data
-        return Response(serializer)
+        rooms = Room.objects.all()
+        page = self.paginate_queryset(rooms)
+        if page is not None:
+            serializer = self.serializer_class(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
     def post(self, request):
         if not request.user.is_authenticated:
@@ -19,8 +22,8 @@ class RoomsView(APIView):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             room = serializer.save(user=request.user)
-            room_serializer = self.serializer_class(room).data
-            return Response(status=status.HTTP_200_OK, data=room_serializer)
+            room_serializer = self.serializer_class(room)
+            return Response(status=status.HTTP_200_OK, data=room_serializer.data)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
 
@@ -38,8 +41,8 @@ class RoomView(APIView):
     def get(self, request, pk):
         room = self.get_room(pk)
         if room is not None:
-            serializer = self.serializer_class(room).data
-            return Response(serializer)
+            serializer = self.serializer_class(room)
+            return Response(serializer.data)
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
 

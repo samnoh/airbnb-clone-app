@@ -6,12 +6,18 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
+from rooms.serializers import RoomSerializer
 from rooms.models import Room
+from core.paginations import Pagination
 from .models import User
 from .serializers import UserSerializer
 
 
 class UsersView(APIView):
+    """
+    Create an account
+    """
+
     serializer_class = UserSerializer
 
     def post(self, request):
@@ -28,7 +34,8 @@ class MeView(APIView):
     serializer_class = UserSerializer
 
     def get(self, request):
-        return Response(self.serializer_class(request.user).data)
+        serializer = self.serializer_class(request.user)
+        return Response(serializer.data)
 
     def put(self, request):
         serializer = self.serializer_class(
@@ -41,14 +48,16 @@ class MeView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
 
 
-class FavsView(APIView):
+class FavsView(APIView, Pagination):
     permission_classes = [IsAuthenticated]
-    serializer_class = UserSerializer
+    serializer_class = RoomSerializer
 
     def get(self, request):
-        user = request.user
-        serializer = self.serializer_class(user.favs.all(), many=True).data
-        return Response(serializer)
+        favs = request.user.favs.all()
+        page = self.paginate_queryset(favs)
+        if page is not None:
+            serializer = self.serializer_class(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
     def put(self, request):
         user = request.user
@@ -86,6 +95,6 @@ def login(request):
         encoded_jwt = jwt.encode(
             {"pk": user.pk}, settings.JWT_SECRET, algorithm="HS256"
         )
-        return Response(data={"token": encoded_jwt})
+        return Response({"token": encoded_jwt})
     else:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
