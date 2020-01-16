@@ -48,16 +48,17 @@ class MeView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
 
 
-class FavsView(APIView, Pagination):
+class FavsView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = RoomSerializer
 
     def get(self, request):
+        paginator = Pagination()
         favs = request.user.favs.all()
-        page = self.paginate_queryset(favs)
+        page = paginator.paginate_queryset(favs, request)
         if page is not None:
             serializer = self.serializer_class(page, many=True)
-            return self.get_paginated_response(serializer.data)
+            return paginator.get_paginated_response(serializer.data)
 
     def put(self, request):
         user = request.user
