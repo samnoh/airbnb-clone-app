@@ -14,9 +14,10 @@ class RoomsView(APIView):
         paginator = Pagination()
         rooms = Room.objects.all()
         page = paginator.paginate_queryset(rooms, request)
-        if page is not None:
-            serializer = self.serializer_class(page, many=True)
-            return paginator.get_paginated_response(serializer.data)
+        serializer = self.serializer_class(
+            page, many=True, context={"reqeust": request}
+        )
+        return paginator.get_paginated_response(serializer.data)
 
     def post(self, request):
         if not request.user.is_authenticated:
