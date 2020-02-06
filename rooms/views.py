@@ -1,6 +1,6 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
-from rest_framework import permissions
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import Room
 from .serializers import RoomSerializer
 from .permissions import IsOwner
@@ -13,9 +13,9 @@ class RoomViewSet(ModelViewSet):
 
     def get_permissions(self):
         if self.action == "list" or self.action == "retrieve":
-            permission_classes = [permissions.AllowAny]
+            permission_classes = [AllowAny]
         elif self.action == "create":
-            permission_classes = [permissions.IsAuthenticated]
+            permission_classes = [IsAuthenticated]
         else:
             # destroy or update
             permission_classes = [IsOwner]
